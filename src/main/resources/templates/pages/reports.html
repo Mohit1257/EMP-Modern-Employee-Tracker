@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html_head('Workforce Reports')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar(${activeNav})}"></aside>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Workforce Reports & Analytics')}"></header>
+
+    <main class="app-content">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="h4 fw-bold mb-1">Workforce Intelligence & Reports</h2>
+                <p class="text-muted small mb-0">Detailed analytical breakdowns of departmental headcount, compensation, and hiring history.</p>
+            </div>
+            <div>
+                <a th:href="@{/employees/export/csv}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Download Directory CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- 3 Metric Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="text-muted small fw-semibold text-uppercase">Total Headcount</div>
+                    <div class="h3 fw-bold mt-1 mb-0" th:text="${summary.totalEmployees}">0</div>
+                    <small class="text-muted">Total employee records in database</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="text-muted small fw-semibold text-uppercase">Active Payroll Rate</div>
+                    <div class="h3 fw-bold mt-1 mb-0 text-primary" th:text="${summary.formattedSalaryExpense}">$0.00</div>
+                    <small class="text-muted">Sum of active compensation</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="text-muted small fw-semibold text-uppercase">Operational Units</div>
+                    <div class="h3 fw-bold mt-1 mb-0 text-info" th:text="${summary.totalDepartments}">0</div>
+                    <small class="text-muted">Active distinct departments</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="fw-semibold mb-0"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Department Breakdown</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="position: relative; height: 280px;">
+                            <canvas id="reportDeptChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="fw-semibold mb-0"><i class="bi bi-graph-up me-2 text-success"></i>Monthly Joining Timeline</h6>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${summary.monthlyTrends.isEmpty()}" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                            No historical hiring timeline data found.
+                        </div>
+                        <div th:unless="${summary.monthlyTrends.isEmpty()}" style="position: relative; height: 280px;">
+                            <canvas id="reportTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employment Type Summary Table -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h6 class="fw-semibold mb-0"><i class="bi bi-table me-2 text-info"></i>Employment Types Breakdown</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Employment Type</th>
+                                <th class="text-center">Headcount</th>
+                                <th class="text-end">Percentage of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="entry : ${summary.employmentTypeDistribution}">
+                                <td class="fw-semibold" th:text="${entry.key}">Full-time</td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border px-2 py-1" th:text="${entry.value}">0</span>
+                                </td>
+                                <td class="text-end text-muted font-monospace"
+                                    th:text="${summary.totalEmployees > 0 ? #numbers.formatDecimal((entry.value * 100.0) / summary.totalEmployees, 1, 1) + '%' : '0.0%'}">
+                                    0%
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+    const deptData = /*[[${summary.departmentDistribution}]]*/ {};
+    const trends = /*[[${summary.monthlyTrends}]]*/ [];
+
+    // Department Chart
+    const deptCanvas = document.getElementById('reportDeptChart');
+    if (typeof Chart !== 'undefined' && deptCanvas && Object.keys(deptData).length > 0) {
+        new Chart(deptCanvas, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(deptData),
+                datasets: [{
+                    label: 'Employees',
+                    data: Object.values(deptData),
+                    backgroundColor: 'rgba(37, 99, 235, 0.85)',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+
+    // Trend Chart
+    const trendCanvas = document.getElementById('reportTrendChart');
+    if (typeof Chart !== 'undefined' && trendCanvas && trends && trends.length > 0) {
+        const trendLabels = trends.map(t => t.period).reverse();
+        const trendValues = trends.map(t => t.count).reverse();
+
+        new Chart(trendCanvas, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: 'New Hires',
+                    data: trendValues,
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+/*]]>*/
+</script>
+
+</body>
+</html>

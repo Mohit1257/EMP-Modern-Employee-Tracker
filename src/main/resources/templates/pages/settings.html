@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html_head('Settings & Profile')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar(${activeNav})}"></aside>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Settings & Profile')}"></header>
+
+    <main class="app-content">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <div class="mb-4">
+            <h2 class="h4 fw-bold mb-1">Administrator Settings</h2>
+            <p class="text-muted small mb-0">Manage your administrative profile and maintain system credential security.</p>
+        </div>
+
+        <div class="row g-4" style="max-width: 900px;">
+            <!-- Profile Details Form -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="fw-semibold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>Admin Profile Information</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/settings/profile}" th:object="${profileForm}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-muted">Username</label>
+                                <input type="text" class="form-control bg-light" th:value="${admin.username}" readonly>
+                                <small class="text-muted">Username cannot be modified.</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label small fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="fullName" th:field="*{fullName}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{fullName}">Full name required</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="email" class="form-label small fw-semibold">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{email}">Valid email required</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary fw-semibold">
+                                <i class="bi bi-save me-1"></i> Update Profile Details
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Password Form -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="fw-semibold mb-0"><i class="bi bi-shield-lock-fill me-2 text-danger"></i>Update Admin Password</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/settings/password}" th:object="${passwordForm}" method="post">
+                            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger py-2 small mb-3">
+                                <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">Password error</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label small fw-semibold">Current Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="currentPassword" th:field="*{currentPassword}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{currentPassword}">Current password required</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label small fw-semibold">New Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="newPassword" th:field="*{newPassword}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{newPassword}">Min 6 characters</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="confirmPassword" class="form-label small fw-semibold">Confirm New Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="confirmPassword" th:field="*{confirmPassword}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{confirmPassword}">Passwords must match</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-danger fw-semibold">
+                                <i class="bi bi-key-fill me-1"></i> Change Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+</body>
+</html>

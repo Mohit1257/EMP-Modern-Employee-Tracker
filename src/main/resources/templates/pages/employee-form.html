@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html_head(${isEdit ? 'Edit Employee' : 'Add Employee'})}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar(${activeNav})}"></aside>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar(${isEdit ? 'Edit Employee' : 'New Employee Onboarding'})}"></header>
+
+    <main class="app-content">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <div class="mb-4">
+            <a th:href="@{/employees}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Cancel and Return to Directory
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm mx-auto" style="max-width: 860px;">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-1" th:text="${isEdit ? 'Update Employee Profile' : 'Register New Employee'}">Employee Profile</h5>
+                <p class="text-muted small mb-0">Fill in all mandatory corporate profile fields. Employee ID and email must be unique.</p>
+            </div>
+
+            <div class="card-body p-4">
+                <form th:action="${isEdit} ? @{/employees/edit/{id}(id=${employeeId})} : @{/employees/add}"
+                      th:object="${employeeForm}" method="post">
+
+                    <!-- Global Form Errors -->
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger py-2 small mb-3">
+                        <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">Global error</div>
+                    </div>
+
+                    <!-- Row 1: Employee Code & Status -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="employeeCode" class="form-label small fw-semibold">Employee ID / Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="employeeCode" th:field="*{employeeCode}"
+                                   placeholder="e.g. EMP-1015" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{employeeCode}">Invalid Code</div>
+                            <small class="text-muted">Unique corporate ID code (e.g. EMP-1001).</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label small fw-semibold">Employment Status <span class="text-danger">*</span></label>
+                            <select id="status" class="form-select" th:field="*{status}" th:errorclass="is-invalid">
+                                <option th:each="st : ${statuses}" th:value="${st}" th:text="${st.displayName}">Active</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{status}">Invalid Status</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Name Fields -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="firstName" th:field="*{firstName}"
+                                   placeholder="e.g. Aarav" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{firstName}">First name required</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="lastName" th:field="*{lastName}"
+                                   placeholder="e.g. Sharma" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{lastName}">Last name required</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Contact Info -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label small fw-semibold">Corporate Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" th:field="*{email}"
+                                   placeholder="e.g. aarav.sharma@example.com" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{email}">Valid email required</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label small fw-semibold">Contact Phone</label>
+                            <input type="text" class="form-control" id="phone" th:field="*{phone}"
+                                   placeholder="e.g. +91 98201 11223" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{phone}">Invalid Phone</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Department & Designation -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="departmentId" class="form-label small fw-semibold">Assigned Department <span class="text-danger">*</span></label>
+                            <select id="departmentId" class="form-select" th:field="*{departmentId}" th:errorclass="is-invalid">
+                                <option value="">-- Choose Department --</option>
+                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name} + ' (' + ${dept.departmentCode} + ')'">Engineering</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{departmentId}">Department required</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="designation" class="form-label small fw-semibold">Designation / Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="designation" th:field="*{designation}"
+                                   placeholder="e.g. Senior Software Engineer" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{designation}">Designation required</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 5: Type, Salary, Joining Date, Location -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label for="employmentType" class="form-label small fw-semibold">Employment Type <span class="text-danger">*</span></label>
+                            <select id="employmentType" class="form-select" th:field="*{employmentType}" th:errorclass="is-invalid">
+                                <option th:each="tp : ${employmentTypes}" th:value="${tp}" th:text="${tp.displayName}">Full-time</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{employmentType}">Type required</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="salary" class="form-label small fw-semibold">Annual Salary ($) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" class="form-control" id="salary" th:field="*{salary}"
+                                   placeholder="e.g. 75000" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{salary}">Valid salary required</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="joiningDate" class="form-label small fw-semibold">Joining Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="joiningDate" th:field="*{joiningDate}" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{joiningDate}">Joining date required</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="location" class="form-label small fw-semibold">Office Location</label>
+                            <input type="text" class="form-control" id="location" th:field="*{location}"
+                                   placeholder="e.g. Pune, HQ" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{location}">Invalid location</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a th:href="@{/employees}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-check2-circle me-1"></i> <span th:text="${isEdit ? 'Save Changes' : 'Create Employee'}">Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+</body>
+</html>

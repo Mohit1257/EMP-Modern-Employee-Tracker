@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="html_head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' — EMP- Modern Employee Tracker' : 'EMP- Modern Employee Tracker'}">EMP- Modern Employee Tracker</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Chart.js 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <!-- Tailwind CSS utilities (compiled locally, prefix tw-, no preflight) -->
+    <link rel="stylesheet" th:href="@{/css/tailwind.css}">
+    <!-- Custom Application CSS -->
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<!-- Sidebar Fragment -->
+<aside class="app-sidebar" th:fragment="sidebar(activeNav)">
+    <div class="sidebar-brand">
+        <div class="brand-icon">
+            <i class="bi bi-briefcase-fill"></i>
+        </div>
+        <div class="d-flex flex-column">
+            <span class="fw-bold text-white fs-6 tracking-wide">EMP- Modern Employee Tracker</span>
+            <span class="tw-text-[0.68rem] tw-text-slate-400">Workforce Manager</span>
+        </div>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="sidebar-heading">Core Operations</div>
+        <a th:href="@{/}" class="sidebar-link" th:classappend="${activeNav == 'dashboard' ? 'active' : ''}">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+        </a>
+        <a th:href="@{/employees}" class="sidebar-link" th:classappend="${activeNav == 'employees' ? 'active' : ''}">
+            <i class="bi bi-people-fill"></i>
+            <span>Employee Directory</span>
+        </a>
+        <a th:href="@{/departments}" class="sidebar-link" th:classappend="${activeNav == 'departments' ? 'active' : ''}">
+            <i class="bi bi-diagram-3-fill"></i>
+            <span>Departments</span>
+        </a>
+
+        <div class="sidebar-heading">Analytics & Reports</div>
+        <a th:href="@{/reports}" class="sidebar-link" th:classappend="${activeNav == 'reports' ? 'active' : ''}">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <span>Workforce Reports</span>
+        </a>
+
+        <div class="sidebar-heading">Administration</div>
+        <a th:href="@{/settings}" class="sidebar-link" th:classappend="${activeNav == 'settings' ? 'active' : ''}">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings & Profile</span>
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <span style="color: #64748b; font-size: 0.72rem;">Version 1.0.0</span>
+        </div>
+        <div class="tw-text-[0.7rem] tw-text-white/50">Built by Mohit Shinde</div>
+    </div>
+</aside>
+
+<!-- Topbar Fragment -->
+<header class="app-topbar" th:fragment="topbar(pageTitle)">
+    <div class="d-flex align-items-center gap-3">
+        <button id="sidebarToggle" class="btn btn-sm btn-outline-secondary d-lg-none" type="button" aria-label="Toggle navigation">
+            <i class="bi bi-list fs-5"></i>
+        </button>
+        <h1 class="h5 mb-0 fw-semibold" th:text="${pageTitle}">Dashboard</h1>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="btn btn-sm btn-outline-secondary rounded-circle p-2" type="button" title="Toggle Theme" aria-label="Toggle dark/light mode">
+            <i id="themeIcon" class="bi bi-moon-stars text-secondary"></i>
+        </button>
+
+        <!-- Admin User Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-sm d-flex align-items-center gap-2 border rounded-pill px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="avatar-circle" style="width: 28px; height: 28px; font-size: 0.72rem;">AD</div>
+                <span class="d-none d-md-inline fw-medium text-truncate" style="max-width: 130px;" th:text="${currentAdmin != null ? currentAdmin.fullName : 'Admin User'}">Admin User</span>
+                <i class="bi bi-chevron-down text-muted" style="font-size: 0.75rem;"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border">
+                <li class="px-3 py-2 border-bottom">
+                    <div class="fw-semibold" th:text="${currentAdmin != null ? currentAdmin.fullName : 'Admin User'}">Mohit Shinde</div>
+                    <small class="text-muted" th:text="${currentAdmin != null ? currentAdmin.email : 'admin@emptrack.com'}">admin@emptrack.com</small>
+                </li>
+                <li><a class="dropdown-item py-2" th:href="@{/settings}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+                <li><a class="dropdown-item py-2" th:href="@{/settings}"><i class="bi bi-shield-lock me-2"></i>Security Settings</a></li>
+                <li><hr class="dropdown-divider my-1"></li>
+                <li>
+                    <form th:action="@{/logout}" method="post" class="m-0 p-0">
+                        <button type="submit" class="dropdown-item py-2 text-danger">
+                            <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</header>
+
+<!-- Alerts Fragment -->
+<div th:fragment="alerts">
+    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMsg}">Action completed successfully.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMsg}">An error occurred.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
+<!-- Modal Confirmation Fragment -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true" th:fragment="deleteModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title text-danger fs-6 fw-bold" id="confirmDeleteModalLabel">
+                    <i class="bi bi-trash3-fill me-2"></i>Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p id="deleteModalMessage" class="mb-0 text-muted">Are you sure you want to delete this record? This action cannot be reversed.</p>
+            </div>
+            <div class="modal-footer border-top bg-light">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteModalForm" method="post" action="">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-sm btn-danger px-3">Delete Record</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts Fragment -->
+<div th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/quotes.js}"></script>
+</div>
+
+</body>
+</html>

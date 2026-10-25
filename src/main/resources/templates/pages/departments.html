@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html_head('Departments')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar(${activeNav})}"></aside>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Department Management')}"></header>
+
+    <main class="app-content">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="h4 fw-bold mb-1">Corporate Departments</h2>
+                <p class="text-muted small mb-0">Manage business units, office locations, and verify team headcount distribution.</p>
+            </div>
+            <div>
+                <a th:href="@{/departments/add}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Add Department
+                </a>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h6 class="fw-semibold mb-0">Active Department Units</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Code</th>
+                                <th>Department Name</th>
+                                <th>Description</th>
+                                <th>Location</th>
+                                <th class="text-center" style="width: 150px;">Assigned Staff</th>
+                                <th class="text-end" style="width: 140px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${departments.isEmpty()}">
+                                <td colspan="6" class="text-center py-5 text-muted">No departments configured yet.</td>
+                            </tr>
+                            <tr th:each="dept : ${departments}">
+                                <td>
+                                    <span class="badge bg-light text-dark border font-monospace fw-bold" th:text="${dept.departmentCode}">ENG</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark" th:text="${dept.name}">Engineering</div>
+                                </td>
+                                <td>
+                                    <span class="text-muted small" th:text="${dept.description != null ? dept.description : '—'}">Core system development</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted small"><i class="bi bi-geo-alt me-1 text-danger"></i><span th:text="${dept.location != null ? dept.location : 'HQ'}">HQ Floor 3</span></span>
+                                </td>
+                                <td class="text-center">
+                                    <a th:href="@{/employees(departmentId=${dept.id})}" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 text-decoration-none px-2 py-1">
+                                        <i class="bi bi-people me-1"></i> <span th:text="${dept.employeeCount}">0</span> staff
+                                    </a>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/departments/edit/{id}(id=${dept.id})}" class="btn btn-outline-secondary" title="Edit Department">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger"
+                                                data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+                                                th:data-delete-url="@{/departments/delete/{id}(id=${dept.id})}"
+                                                th:data-item-name="${dept.name}"
+                                                data-item-type="department">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: deleteModal}"></div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+</body>
+</html>
